@@ -64,4 +64,7 @@ dependencies {
     implementation("com.squareup.retrofit2:converter-gson:$retrofit_version")
 // Scalars Converter 라이브러리
     implementation("com.squareup.retrofit2:converter-scalars:$retrofit_version")
+
+    implementation ("com.github.bumptech.glide:glide:4.15.1")
+    annotationProcessor ("com.github.bumptech.glide:compiler:4.15.1")
 }
