@@ -1,6 +1,7 @@
 package com.example.kuit4_android_retrofit
 
 import RVPopularMenuAdapter
+import android.app.AlertDialog
 import android.content.Context
 import android.content.SharedPreferences
 import android.os.Bundle
@@ -9,12 +10,15 @@ import android.view.LayoutInflater
 import android.view.Menu
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
 import com.example.kuit4_android_retrofit.data.CategoryData
 import com.example.kuit4_android_retrofit.data.MenuData
+import com.example.kuit4_android_retrofit.databinding.DialogAddCategoryBinding
+import com.example.kuit4_android_retrofit.databinding.DialogAddMenuBinding
 import com.example.kuit4_android_retrofit.databinding.FragmentHomeBinding
 import com.example.kuit4_android_retrofit.databinding.ItemCategoryBinding
 import com.example.kuit4_android_retrofit.databinding.ItemPopularMenuBinding
@@ -38,10 +42,331 @@ class HomeFragment : Fragment() {
     ): View? {
         binding = FragmentHomeBinding.inflate(inflater, container, false)
 
-
         fetchCategoryInfo()
         fetchMenuInfo()
+
+        binding.ivAddCategory.setOnClickListener() {
+            addCategoryDialog()
+        }
+        binding.ivAddMenu.setOnClickListener() {
+            addMenuDialog()
+        }
         return binding.root
+    }
+
+    private fun addMenuDialog() {
+        val dialogBinding = DialogAddMenuBinding.inflate(LayoutInflater.from(requireContext()))
+
+        val dialog = AlertDialog.Builder(requireContext())
+            .setView(dialogBinding.root)
+            .create()
+
+        dialogBinding.btnAddMenu.setText("추가")
+        dialogBinding.btnAddMenu.setOnClickListener {
+            val menuName = dialogBinding.etMenuName.text.toString().trim()
+            val menuImageUrl = dialogBinding.etMenuImageUrl.text.toString().trim()
+
+            if (menuName.isNotEmpty() && menuImageUrl.isNotEmpty()) {
+                val newMenu = MenuData(menuName, menuImageUrl, 0, 0.0,"") // 적절한 데이터 설정
+                addMenu(newMenu)
+                dialog.dismiss()
+            } else {
+                Toast.makeText(requireContext(), "모든 필드를 입력하세요.", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        dialogBinding.btnCancelMenu.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialog.show()
+    }
+
+    private fun addMenu(menuData: MenuData) {
+        val service = RetrofitObject.retrofit.create(MenuService::class.java)
+        val call = service.postMenu(menuData)
+
+        call.enqueue(object : retrofit2.Callback<MenuData> {
+            override fun onResponse(call: Call<MenuData>, response: Response<MenuData>) {
+                if (response.isSuccessful) {
+                    fetchMenuInfo()
+                    Toast.makeText(requireContext(), "메뉴가 추가되었습니다.", Toast.LENGTH_SHORT).show()
+                } else {
+                    Log.e("Error", "메뉴 추가 실패: ${response.code()}")
+                }
+            }
+
+            override fun onFailure(call: Call<MenuData>, t: Throwable) {
+                Log.e("Error", "네트워크 오류: ${t.message}")
+            }
+        })
+    }
+
+    private fun showEditMenuDialog(menu: MenuData) {
+        val dialogBinding = DialogAddMenuBinding.inflate(LayoutInflater.from(requireContext()))
+
+        val dialog =
+            AlertDialog
+                .Builder(requireContext())
+                .setView(dialogBinding.root)
+                .create()
+
+        dialogBinding.etMenuName.setText(menu.menuName)
+        dialogBinding.etMenuImageUrl.setText(menu.menuImg)
+
+        dialogBinding.btnAddMenu.text = "수정"
+        dialogBinding.btnAddMenu.setOnClickListener {
+            val updatedName =
+                dialogBinding.etMenuName.text.toString().trim()
+            val updatedImageUrl =
+                dialogBinding.etMenuImageUrl.text.toString().trim()
+
+            if (updatedName.isNotEmpty() && updatedImageUrl.isNotEmpty()) {
+                val updatedMenu = MenuData(updatedName, updatedImageUrl, menu.menuTime, menu.menuRate, menu.id)
+                updateMenu(updatedMenu)
+                dialog.dismiss()
+            } else {
+                Toast.makeText(requireContext(), "모든 필드를 입력하세요.", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        dialogBinding.btnCancelMenu.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialog.show()
+    }
+
+    private fun updateMenu(menuData: MenuData) {
+        val service = RetrofitObject.retrofit.create(MenuService::class.java)
+        val call = service.putMenu(menuData.id, menuData)
+
+        call.enqueue(object : retrofit2.Callback<MenuData> {
+            override fun onResponse(call: Call<MenuData>, response: Response<MenuData>) {
+                if (response.isSuccessful) {
+                    fetchMenuInfo()
+                    Toast.makeText(requireContext(), "메뉴가 수정되었습니다.", Toast.LENGTH_SHORT).show()
+                } else {
+                    Log.e("Error", "메뉴 수정 실패: ${response.code()}")
+                }
+            }
+
+            override fun onFailure(call: Call<MenuData>, t: Throwable) {
+                Log.e("Error", "네트워크 오류: ${t.message}")
+            }
+        })
+    }
+    private fun deleteMenu(menuId: String) {
+        val service = RetrofitObject.retrofit.create(MenuService::class.java)
+        val call = service.deleteMenu(menuId)
+
+        call.enqueue(object : retrofit2.Callback<Void> {
+            override fun onResponse(call: Call<Void>, response: Response<Void>) {
+                if (response.isSuccessful) {
+                    fetchMenuInfo()
+
+                } else {
+                    Log.e("실패", "메뉴 삭제 실패: ${response.code()}")
+                }
+            }
+
+            override fun onFailure(call: Call<Void>, t: Throwable) {
+                Log.e("실패", "네트워크 오류: ${t.message}")
+            }
+        })
+    }
+    private fun showMenuOptionsDialog(menu: MenuData) {
+        val options = arrayOf("수정", "삭제")
+
+        AlertDialog.Builder(requireContext())
+            .setTitle("메뉴 옵션")
+            .setItems(options) { _, which ->
+                when (which) {
+                    0 -> showEditMenuDialog(menu) // 수정
+                    1 -> deleteMenu(menu.id) // 삭제
+                }
+            }.show()
+    }
+
+    private fun showCategoryOptionsDialog(category: CategoryData) {
+        val options = arrayOf("수정", "삭제")
+
+        AlertDialog
+            .Builder(requireContext())
+            .setTitle("카테고리 옵션")
+            .setItems(options) { _, which ->
+                when (which) {
+                    0 -> showEditCategoryDialog(category) // 수정
+                    1 -> deleteCategory(category.id) // 삭제
+                }
+            }.show()
+    }
+
+    private fun showEditCategoryDialog(category: CategoryData) {
+        val dialogBinding = DialogAddCategoryBinding.inflate(LayoutInflater.from(requireContext()))
+
+        val dialog =
+            AlertDialog
+                .Builder(requireContext())
+                .setView(dialogBinding.root)
+                .create()
+
+        // 기존 데이터로 다이얼로그 초기화
+        dialogBinding.etCategoryName.setText(category.categoryName)
+        dialogBinding.etCategoryImageUrl.setText(category.categoryImg)
+
+        // "수정" 버튼 클릭 시
+        dialogBinding.btnAddCategory.text = "수정"
+        dialogBinding.btnAddCategory.setOnClickListener {
+            val updatedName =
+                dialogBinding.etCategoryName.text
+                    .toString()
+                    .trim()
+            val updatedImageUrl =
+                dialogBinding.etCategoryImageUrl.text
+                    .toString()
+                    .trim()
+
+            if (updatedName.isNotEmpty() && updatedImageUrl.isNotEmpty()) {
+                // TODO: 수정할 데이터 설정하기
+                val updatedCategory = CategoryData(updatedName, updatedImageUrl, category.id)
+
+                updatedCategory(updatedCategory)
+                dialog.dismiss()
+            } else {
+                Toast.makeText(requireContext(), "모든 필드를 입력하세요.", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        // "취소" 버튼 클릭 시
+        dialogBinding.btnCancelCategory.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialog.show()
+    }
+
+    private fun updatedCategory(updatedCategory: CategoryData) {
+        val service = RetrofitObject.retrofit.create(CategoryService::class.java)
+        val call = service.putCategory(updatedCategory.id, updatedCategory)
+
+        call.enqueue(
+            object : retrofit2.Callback<CategoryData> {
+                override fun onResponse(
+                    call: Call<CategoryData>,
+                    response: Response<CategoryData>
+                ) {
+                    if (response.isSuccessful) {
+                        Log.d("성공", "카테고리 수정 성공 : ${response.body()}")
+                        fetchCategoryInfo()
+                    } else {
+                        Log.d("성공", "카테고리 수정 실패 : ${response.body()}")
+                    }
+                }
+
+                override fun onFailure(call: Call<CategoryData>, t: Throwable) {
+                    Log.d("실패", "네트워크 연결 실패 : ${t.message}")
+                }
+
+            }
+        )
+    }
+
+    private fun deleteCategory(categoryId: String) {
+        val service = RetrofitObject.retrofit.create(CategoryService::class.java)
+        val call = service.deleteCategory(categoryId)
+
+        call.enqueue(
+            object : retrofit2.Callback<Void> {
+                override fun onResponse(call: Call<Void>, response: Response<Void>) {
+                    if (response.isSuccessful) {
+                        Log.d("성공", "카테고리 삭제 성공 : $categoryId")
+                        fetchCategoryInfo()
+                    } else {
+                        Log.d("실패", "카테고리 삭제 실패 : ${response.code()}")
+                    }
+                }
+
+                override fun onFailure(call: Call<Void>, t: Throwable) {
+                    Log.d("실패", "네트워크 요청 실패 : ${t.message}")
+                }
+
+            }
+        )
+    }
+
+    private fun addCategoryDialog() {
+        // ViewBinding을 활용해 dialog_add_category 레이아웃 바인딩
+        val dialogBinding = DialogAddCategoryBinding.inflate(LayoutInflater.from(requireContext()))
+
+        val dialog =  // dialog 생성
+            AlertDialog
+                .Builder(requireContext())
+                .setView(dialogBinding.root)
+                .create()
+
+        // "추가" 버튼 클릭 시 동작
+        dialogBinding.btnAddCategory.setOnClickListener {
+            val categoryName =
+                dialogBinding.etCategoryName.text
+                    .toString()
+                    .trim()
+            val categoryImageUrl =
+                dialogBinding.etCategoryImageUrl.text
+                    .toString()
+                    .trim()
+
+            if (categoryName.isNotEmpty() && categoryImageUrl.isNotEmpty()) {
+                // TODO: 데이터 설정하기
+                val newCategory = CategoryData(categoryName, categoryImageUrl, "0")
+                addCategory(newCategory)
+
+                dialog.dismiss()
+            } else {
+                Toast.makeText(requireContext(), "모든 필드를 입력하세요.", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        // "취소" 버튼 클릭 시 동작
+        dialogBinding.btnCancelCategory.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialog.show()
+    }
+
+    private fun addCategory(categoryData: CategoryData) {
+        val service = RetrofitObject.retrofit.create(CategoryService::class.java)
+        val call = service.postCategory(categoryData)
+
+        call.enqueue(
+            object : retrofit2.Callback<CategoryData> {
+                override fun onResponse(
+                    call: Call<CategoryData>,
+                    response: Response<CategoryData>
+                ) {
+                    if (response.isSuccessful) {
+                        val addedCategory = response.body()
+
+                        if (addedCategory != null) {
+                            Log.d("성공", "카테고리 추가 성공 : $addedCategory")
+                            fetchCategoryInfo()
+                        } else {
+                            Log.d("실패", "카테고리 추가 실패 : 응답 데이터 없음")
+                        }
+                    } else {
+                        Log.d("실패", "카테고리 추가 실패 : 상태코드 ${response.code()}")
+                    }
+                }
+
+                override fun onFailure(call: Call<CategoryData>, t: Throwable) {
+                    Log.d("실패", "네트워크 요청 실패 : 상태코드 ${t.message}")
+
+                }
+
+            }
+
+        )
     }
 
     private fun fetchMenuInfo() {
@@ -72,11 +397,12 @@ class HomeFragment : Fragment() {
     }
 
     private fun showMenuInfo(menuList: List<MenuData>) {
-        val adapter = RVPopularMenuAdapter(menuList)  // 메뉴 데이터 리스트 어댑터에 전달해서 어댑터 객체 생성
+        val adapter = RVPopularMenuAdapter(menuList) { menu ->
+            showMenuOptionsDialog(menu) // 클릭 이벤트 발생 시 다이얼로그 호출
+        }
         binding.rvMainPopularMenus.layoutManager = LinearLayoutManager(context)
         binding.rvMainPopularMenus.adapter = adapter
     }
-
 
     // 카테고리 정보 가져오는 함수
     private fun fetchCategoryInfo() {
@@ -131,6 +457,9 @@ class HomeFragment : Fragment() {
             // 카테고리 이름 설정
             categoryBinding.tvCategoryName.text = category.categoryName
 
+            categoryBinding.root.setOnClickListener() {
+                showCategoryOptionsDialog(category)
+            }
             // 레이아웃에 카테고리 항목 추가
             binding.llMainMenuCategory.addView(categoryBinding.root)
         }

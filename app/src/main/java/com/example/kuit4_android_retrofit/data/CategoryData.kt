@@ -5,5 +5,6 @@ import androidx.room.PrimaryKey
 
 data class CategoryData(
     val categoryName: String,
-    val categoryImg: String
+    val categoryImg: String,
+    val id : String,
 )

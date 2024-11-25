@@ -20,6 +20,18 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <!-- 카테고리 추가 버튼 -->
+    <ImageView
+        android:id="@+id/iv_add_category"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:layout_marginTop="12dp"
+        android:layout_marginEnd="8dp"
+        android:src="@drawable/ic_add"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/et_main_search" />
+
     <!-- 카테고리 메뉴 -->
     <HorizontalScrollView
         android:id="@+id/hsv_main_menu_category"
@@ -29,7 +41,7 @@
         android:padding="8dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/et_main_search">
+        app:layout_constraintTop_toBottomOf="@id/iv_add_category">
 
         <LinearLayout
             android:id="@+id/ll_main_menu_category"
@@ -54,6 +66,19 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/hsv_main_menu_category" />
 
+    <!-- 메뉴 추가 버튼 -->
+    <ImageView
+        android:id="@+id/iv_add_menu"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:layout_marginTop="12dp"
+        android:layout_marginEnd="8dp"
+        android:src="@drawable/ic_add"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tv_main_popular_menu" />
+
     <!-- 인기 메뉴 리스트 -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rv_main_popular_menus"
@@ -62,7 +87,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tv_main_popular_menu"
+        app:layout_constraintTop_toBottomOf="@id/iv_add_menu"
         tools:listitem="@layout/item_popular_menu" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

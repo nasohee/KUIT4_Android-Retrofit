@@ -9,30 +9,33 @@ import com.example.kuit4_android_retrofit.databinding.ItemPopularMenuBinding
 // 메뉴 아이템 데이터를 리사이클러뷰의 각 항목에 표시해줌
 class RVPopularMenuAdapter(
     private val menuList: List<MenuData>,
-) : RecyclerView.Adapter<RVPopularMenuAdapter.ViewHolder>() {
-    inner class ViewHolder(private val binding: ItemPopularMenuBinding) :
+    private val onItemClick: (MenuData) -> Unit // 클릭 리스너 전달
+) : RecyclerView.Adapter<RVPopularMenuAdapter.MenuViewHolder>() {
+
+    inner class MenuViewHolder(private val binding: ItemPopularMenuBinding) :
         RecyclerView.ViewHolder(binding.root) {
-        // 데이터 뷰에 연결
-        @SuppressLint("SetTextI18n")
         fun bind(menu: MenuData) {
-            Glide.with(binding.root)
-                .load(menu.menuImg)
-                .into(binding.ivPopularMenuImg)
             binding.tvPopularMenuName.text = menu.menuName
-            binding.tvPopularMenuTime.text = menu.menuTime.toString() + "분"
-            binding.tvPopularMenuRate.text = menu.menuRate.toString()
+            Glide.with(binding.root.context).load(menu.menuImg).into(binding.ivPopularMenuImg)
+
+            binding.root.setOnClickListener {
+                onItemClick(menu)
+            }
         }
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val binding =
-            ItemPopularMenuBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-        return ViewHolder(binding)
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MenuViewHolder {
+        val binding = ItemPopularMenuBinding.inflate(
+            LayoutInflater.from(parent.context),
+            parent,
+            false
+        )
+        return MenuViewHolder(binding)
     }
 
-    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: MenuViewHolder, position: Int) {
         holder.bind(menuList[position])
     }
 
-    override fun getItemCount(): Int = menuList.size
+    override fun getItemCount() = menuList.size
 }

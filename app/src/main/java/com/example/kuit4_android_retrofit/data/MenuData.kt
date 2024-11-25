@@ -4,5 +4,6 @@ data class MenuData(
     val menuName : String,
     val menuImg : String,
     val menuTime : Int,
-    val menuRate : Double
+    val menuRate : Double,
+    val id : String,
 )
