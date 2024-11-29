@@ -65,9 +65,17 @@ class HomeFragment : Fragment() {
         dialogBinding.btnAddMenu.setOnClickListener {
             val menuName = dialogBinding.etMenuName.text.toString().trim()
             val menuImageUrl = dialogBinding.etMenuImageUrl.text.toString().trim()
+            val menuRate = dialogBinding.etMenuRate.text.toString().trim()
+            val menuTime = dialogBinding.etMenuTime.text.toString().trim()
 
             if (menuName.isNotEmpty() && menuImageUrl.isNotEmpty()) {
-                val newMenu = MenuData(menuName, menuImageUrl, 0, 0.0,"") // 적절한 데이터 설정
+                val newMenu = MenuData(
+                    menuName,
+                    menuImageUrl,
+                    menuTime.toInt(),
+                    menuRate.toDouble(),
+                    ""
+                ) // 적절한 데이터 설정
                 addMenu(newMenu)
                 dialog.dismiss()
             } else {
@@ -82,15 +90,17 @@ class HomeFragment : Fragment() {
         dialog.show()
     }
 
+    /// 메뉴 추가
     private fun addMenu(menuData: MenuData) {
         val service = RetrofitObject.retrofit.create(MenuService::class.java)
-        val call = service.postMenu(menuData)
+        val call = service.postMenu(menuData) // 서버에 메뉴 추가 요청
 
         call.enqueue(object : retrofit2.Callback<MenuData> {
             override fun onResponse(call: Call<MenuData>, response: Response<MenuData>) {
-                if (response.isSuccessful) {
-                    fetchMenuInfo()
-                    Toast.makeText(requireContext(), "메뉴가 추가되었습니다.", Toast.LENGTH_SHORT).show()
+                val addedMenu = response.body()
+                if (response.isSuccessful) { // 응답 성공하면
+                    Log.d("성공", "메뉴 추가 성공 : $addedMenu")
+                    fetchMenuInfo()  // 메뉴 정보 새로고침
                 } else {
                     Log.e("Error", "메뉴 추가 실패: ${response.code()}")
                 }
@@ -110,21 +120,38 @@ class HomeFragment : Fragment() {
                 .Builder(requireContext())
                 .setView(dialogBinding.root)
                 .create()
-
+        // 기존 데이터로 다이얼로그 초기화
         dialogBinding.etMenuName.setText(menu.menuName)
         dialogBinding.etMenuImageUrl.setText(menu.menuImg)
 
+        dialogBinding.etMenuRate.setText(menu.menuRate.toString())
+        dialogBinding.etMenuTime.setText(menu.menuTime.toString())
+
+
         dialogBinding.btnAddMenu.text = "수정"
+        // 수정 버튼 클릭 시
         dialogBinding.btnAddMenu.setOnClickListener {
             val updatedName =
                 dialogBinding.etMenuName.text.toString().trim()
             val updatedImageUrl =
                 dialogBinding.etMenuImageUrl.text.toString().trim()
+            val updatedRate =
+                dialogBinding.etMenuRate.text.toString().trim()
+            val updatedTime =
+                dialogBinding.etMenuTime.text.toString().trim()
 
+            // 필드가 모두 채워졌는지 확인 후 메뉴 수정
             if (updatedName.isNotEmpty() && updatedImageUrl.isNotEmpty()) {
-                val updatedMenu = MenuData(updatedName, updatedImageUrl, menu.menuTime, menu.menuRate, menu.id)
-                updateMenu(updatedMenu)
-                dialog.dismiss()
+                val updatedMenu =
+                    MenuData(
+                        updatedName,
+                        updatedImageUrl,
+                        updatedTime.toInt(),
+                        updatedRate.toDouble(),
+                        menu.id
+                    )
+                updateMenu(updatedMenu) // updateMenu 함수 호출
+                dialog.dismiss()// 다이얼로그 닫기
             } else {
                 Toast.makeText(requireContext(), "모든 필드를 입력하세요.", Toast.LENGTH_SHORT).show()
             }
@@ -137,15 +164,16 @@ class HomeFragment : Fragment() {
         dialog.show()
     }
 
+    // 메뉴 수정
     private fun updateMenu(menuData: MenuData) {
         val service = RetrofitObject.retrofit.create(MenuService::class.java)
-        val call = service.putMenu(menuData.id, menuData)
+        val call = service.putMenu(menuData.id, menuData) // 서버에 메뉴 수정 요청
 
         call.enqueue(object : retrofit2.Callback<MenuData> {
             override fun onResponse(call: Call<MenuData>, response: Response<MenuData>) {
                 if (response.isSuccessful) {
-                    fetchMenuInfo()
-                    Toast.makeText(requireContext(), "메뉴가 수정되었습니다.", Toast.LENGTH_SHORT).show()
+                    fetchMenuInfo() // 메뉴 정보 새로고침
+                    Log.e("성공", "메뉴 수정 성공: ${response.body()}")
                 } else {
                     Log.e("Error", "메뉴 수정 실패: ${response.code()}")
                 }
@@ -156,14 +184,16 @@ class HomeFragment : Fragment() {
             }
         })
     }
+
+    // 메뉴 삭제
     private fun deleteMenu(menuId: String) {
         val service = RetrofitObject.retrofit.create(MenuService::class.java)
-        val call = service.deleteMenu(menuId)
+        val call = service.deleteMenu(menuId) // 서버에 메뉴 삭제 요청
 
         call.enqueue(object : retrofit2.Callback<Void> {
             override fun onResponse(call: Call<Void>, response: Response<Void>) {
                 if (response.isSuccessful) {
-                    fetchMenuInfo()
+                    fetchMenuInfo() // 메뉴 정보 새로고침
 
                 } else {
                     Log.e("실패", "메뉴 삭제 실패: ${response.code()}")
@@ -175,6 +205,7 @@ class HomeFragment : Fragment() {
             }
         })
     }
+
     private fun showMenuOptionsDialog(menu: MenuData) {
         val options = arrayOf("수정", "삭제")
 
@@ -391,7 +422,6 @@ class HomeFragment : Fragment() {
                     Log.d("MenuFetchError", "메뉴 데이터 가져오는 중")
 
                 }
-
             }
         )
     }
