@@ -66,7 +66,7 @@ class HomeFragment : Fragment() {
             val menuName = dialogBinding.etMenuName.text.toString().trim()
             val menuImageUrl = dialogBinding.etMenuImageUrl.text.toString().trim()
             val menuRate = dialogBinding.etMenuRate.text.toString().trim()
-            val menuTime = dialogBinding.etMenuTime.text.toString()+"분".trim()
+            val menuTime = dialogBinding.etMenuTime.text.toString().trim()
 
             if (menuName.isNotEmpty() && menuImageUrl.isNotEmpty()) {
                 val newMenu = MenuData(
@@ -137,7 +137,7 @@ class HomeFragment : Fragment() {
             val updatedRate =
                 dialogBinding.etMenuRate.text.toString().trim()
             val updatedTime =
-                dialogBinding.etMenuTime.text.toString()+"분".trim()
+                dialogBinding.etMenuTime.text.toString().trim()
 
             // 필드가 모두 채워졌는지 확인 후 메뉴 수정
             if (updatedName.isNotEmpty() && updatedImageUrl.isNotEmpty()) {
