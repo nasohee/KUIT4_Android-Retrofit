@@ -66,7 +66,7 @@ class HomeFragment : Fragment() {
             val menuName = dialogBinding.etMenuName.text.toString().trim()
             val menuImageUrl = dialogBinding.etMenuImageUrl.text.toString().trim()
             val menuRate = dialogBinding.etMenuRate.text.toString().trim()
-            val menuTime = dialogBinding.etMenuTime.text.toString().trim()
+            val menuTime = dialogBinding.etMenuTime.text.toString()+"분".trim()
 
             if (menuName.isNotEmpty() && menuImageUrl.isNotEmpty()) {
                 val newMenu = MenuData(
@@ -75,7 +75,7 @@ class HomeFragment : Fragment() {
                     menuTime.toInt(),
                     menuRate.toDouble(),
                     ""
-                ) // 적절한 데이터 설정
+                )
                 addMenu(newMenu)
                 dialog.dismiss()
             } else {
@@ -123,7 +123,6 @@ class HomeFragment : Fragment() {
         // 기존 데이터로 다이얼로그 초기화
         dialogBinding.etMenuName.setText(menu.menuName)
         dialogBinding.etMenuImageUrl.setText(menu.menuImg)
-
         dialogBinding.etMenuRate.setText(menu.menuRate.toString())
         dialogBinding.etMenuTime.setText(menu.menuTime.toString())
 
@@ -138,7 +137,7 @@ class HomeFragment : Fragment() {
             val updatedRate =
                 dialogBinding.etMenuRate.text.toString().trim()
             val updatedTime =
-                dialogBinding.etMenuTime.text.toString().trim()
+                dialogBinding.etMenuTime.text.toString()+"분".trim()
 
             // 필드가 모두 채워졌는지 확인 후 메뉴 수정
             if (updatedName.isNotEmpty() && updatedImageUrl.isNotEmpty()) {
